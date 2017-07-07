@@ -16,6 +16,7 @@
 
 int main (int argc, char** argv)
 {
+    //set up game
     int numPlayers;
     int seed;
     int num;
@@ -24,11 +25,14 @@ int main (int argc, char** argv)
     
     printf("Testing supplyCount\n");
     
+    //get valid amount of players and random seed
     numPlayers = rand() % 3 + 2;
     seed = rand();
     
+    //initialize game
     initializeGame(numPlayers, k, seed, &G);
 	
+    //test for correct amount of supplies for 2 players
     if (numPlayers == 2)
     {
         num = supplyCount(curse, &G);
@@ -45,6 +49,7 @@ int main (int argc, char** argv)
         assert(num == 46);
     }
     
+    //test for correct amount of supplies for 3 players
     if (numPlayers == 3)
     {
         num = supplyCount(curse, &G);
@@ -53,6 +58,7 @@ int main (int argc, char** argv)
         assert(num == 39);
     }
     
+    //test for correct amount of supplies for 4 players
     if (numPlayers == 4)
     {
         num = supplyCount(curse, &G);
@@ -61,6 +67,7 @@ int main (int argc, char** argv)
         assert(num == 32);
     }
     
+    //test for correct amount of supplies for more than 2 players
     if (numPlayers > 2)
     {
         num = supplyCount(estate, &G);
@@ -74,6 +81,7 @@ int main (int argc, char** argv)
         
     }
     
+    //test for correct amount of constant supplies
     num = supplyCount(silver, &G);
     assert(num == 40);
     num = supplyCount(gold, &G);
@@ -97,14 +105,17 @@ int main (int argc, char** argv)
     num = supplyCount(smithy, &G);
     assert(num == 10);
     
+    //test for increased supplies
     G.supplyCount[silver]++;
     num = supplyCount(silver, &G);
     assert(num == 41);
     
+    //test for 10 added supplies
     G.supplyCount[silver] = G.supplyCount[silver] + 10;
     num = supplyCount(silver, &G);
     assert(num == 51);
     
+    //check the tests
     checkTest();
 	
 	return 0;
