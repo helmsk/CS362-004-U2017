@@ -421,9 +421,9 @@ call    0 returned 100%
         4:  317:  return state->hand[currentPlayer][handPos];
         -:  318:}
         -:  319:
-function supplyCount called 19 returned 100% blocks executed 100%
-       19:  320:int supplyCount(int card, struct gameState *state) {
-       19:  321:  return state->supplyCount[card];
+function supplyCount called 123 returned 100% blocks executed 100%
+      123:  320:int supplyCount(int card, struct gameState *state) {
+      123:  321:  return state->supplyCount[card];
         -:  322:}
         -:  323:
 function fullDeckCount called 3 returned 100% blocks executed 71%

@@ -7,15 +7,15 @@ All tests passed!
 Testing updateCoins
 All tests passed!
 Testing Adventurer card
-Assert failed: {G.hand[0][0] != adventurer}, file cardtest1.c, line 45.
+Assert failed: {G.hand[0][0] != adventurer}, file cardtest1.c, line 56.
 Test failed: 1 failed assertions
 Testing Gardens card
-Assert failed: {returnValue == 0}, file cardtest2.c, line 36.
-Assert failed: {handCountAfter == (handCountBefore - 1)}, file cardtest2.c, line 41.
-Assert failed: {G.hand[0][0] != gardens}, file cardtest2.c, line 43.
+Assert failed: {returnValue == 0}, file cardtest2.c, line 43.
+Assert failed: {G.handCount[0] == (pre.handCount[0] - 1)}, file cardtest2.c, line 46.
+Assert failed: {G.hand[0][0] != gardens}, file cardtest2.c, line 52.
 Test failed: 3 failed assertions
 Testing Smithy card
-Assert failed: {G.hand[0][0] != smithy}, file cardtest3.c, line 43.
+Assert failed: {G.hand[0][0] != smithy}, file cardtest3.c, line 52.
 Test failed: 1 failed assertions
 Testing Village card
 All tests passed!
@@ -347,8 +347,8 @@ Creating 'dominion.c.gcov'
         4:  317:  return state->hand[currentPlayer][handPos];
         -:  318:}
         -:  319:
-       19:  320:int supplyCount(int card, struct gameState *state) {
-       19:  321:  return state->supplyCount[card];
+      123:  320:int supplyCount(int card, struct gameState *state) {
+      123:  321:  return state->supplyCount[card];
         -:  322:}
         -:  323:
         3:  324:int fullDeckCount(int player, int card, struct gameState *state) {
@@ -1826,9 +1826,9 @@ call    0 returned 100%
         4:  317:  return state->hand[currentPlayer][handPos];
         -:  318:}
         -:  319:
-function supplyCount called 19 returned 100% blocks executed 100%
-       19:  320:int supplyCount(int card, struct gameState *state) {
-       19:  321:  return state->supplyCount[card];
+function supplyCount called 123 returned 100% blocks executed 100%
+      123:  320:int supplyCount(int card, struct gameState *state) {
+      123:  321:  return state->supplyCount[card];
         -:  322:}
         -:  323:
 function fullDeckCount called 3 returned 100% blocks executed 71%
