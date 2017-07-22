@@ -1,18 +1,72 @@
+/***********************************************************
+ * Author:          Kelsey Helms
+ * Date Created:    July 20, 2017
+ * Filename:        testme.c
+ *
+ * Overview:
+ * This is a random tester.
+ ************************************************************/
+
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
 #include<time.h>
 
+int full = 0;
+
 char inputChar()
 {
-    // TODO: rewrite this function
-    return ' ';
+    int i;
+    char c;
+    static char charset1[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!{}[]() ";
+    static char charset2[] = "{[( )]}xa";
+
+    if (full == 1)
+    {
+        i = rand() % (int)(sizeof(charset1) - 1);
+        c = charset1[i];
+    }
+    else
+    {
+        i = rand() % (int)(sizeof(charset2) - 1);
+        c = charset2[i];
+    }
+
+    return c;
 }
 
 char *inputString()
 {
-    // TODO: rewrite this function
-    return "";
+    int i, len;
+    char c;
+    static char charset1[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!{}[]() ";
+    static char charset2[] = "rest";
+    len = 6;
+    char cstring[len];
+    char *p;
+
+	if (full == 1)
+    {
+        for (i=0; i<len-1; i++)
+        {
+            int j = rand() % (int)(sizeof(charset1) - 1);
+            c = charset1[j];
+            cstring[i] = c;
+        }
+    }
+    else
+    {
+        for (i=0; i<len-1; i++)
+        {
+            int j = rand() % (int)(sizeof(charset2) - 1);
+            c = charset2[j];
+            cstring[i] = c;
+        }
+    }
+
+    cstring[5] = '\0';
+    p = &cstring[0];
+    return p;
 }
 
 void testme()
@@ -31,7 +85,7 @@ void testme()
     if (c == '[' && state == 0) state = 1;
     if (c == '(' && state == 1) state = 2;
     if (c == '{' && state == 2) state = 3;
-    if (c == ' '&& state == 3) state = 4;
+    if (c == ' ' && state == 3) state = 4;
     if (c == 'a' && state == 4) state = 5;
     if (c == 'x' && state == 5) state = 6;
     if (c == '}' && state == 6) state = 7;

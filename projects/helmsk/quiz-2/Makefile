@@ -5,3 +5,4 @@ testme: testme.c
 
 runtest: testme
 	./testme
+
