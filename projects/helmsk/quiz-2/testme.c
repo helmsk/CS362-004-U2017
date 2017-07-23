@@ -12,24 +12,30 @@
 #include<stdlib.h>
 #include<time.h>
 
-int full = 0;
+int mode = 1;
 
 char inputChar()
 {
     int i;
     char c;
-    static char charset1[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!{}[]() ";
-    static char charset2[] = "{[( )]}xa";
+    static char charset1[] = " !#\"$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    static char charset2[] = " !#\"$%&'()*+,-./:;<=>?@[]^_`ax{|}~";
+    static char charset3[] = " ()[]ax{}";
 
-    if (full == 1)
+    if (mode == 0)
     {
         i = rand() % (int)(sizeof(charset1) - 1);
         c = charset1[i];
     }
-    else
+    else if (mode == 1)
     {
         i = rand() % (int)(sizeof(charset2) - 1);
         c = charset2[i];
+    }
+    else
+    {
+        i = rand() % (int)(sizeof(charset3) - 1);
+        c = charset3[i];
     }
 
     return c;
@@ -39,27 +45,37 @@ char *inputString()
 {
     int i, len;
     char c;
-    static char charset1[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!{}[]() ";
-    static char charset2[] = "rest";
+    static char charset1[] = " !#\"$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    static char charset2[] = "abcdefghijklmnopqrstuvwxyz";
+    static char charset3[] = "rest";
     len = 6;
     char cstring[len];
     char *p;
 
-	if (full == 1)
+	if (mode == 0)
     {
-        for (i=0; i<len-1; i++)
+        for (i = 0; i < len-1; i++)
         {
             int j = rand() % (int)(sizeof(charset1) - 1);
             c = charset1[j];
             cstring[i] = c;
         }
     }
-    else
+    else if (mode == 1)
     {
-        for (i=0; i<len-1; i++)
+        for (i = 0; i < len-1; i++)
         {
             int j = rand() % (int)(sizeof(charset2) - 1);
             c = charset2[j];
+            cstring[i] = c;
+        }
+    }
+    else
+    {
+        for (i = 0; i < len-1; i++)
+        {
+            int j = rand() % (int)(sizeof(charset3) - 1);
+            c = charset3[j];
             cstring[i] = c;
         }
     }
