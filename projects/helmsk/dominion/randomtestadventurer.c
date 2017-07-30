@@ -68,6 +68,15 @@ int main()
             //1 in 3 chance of making empty deck for coverage
             if (seed % 3 == 0)
                 G.deckCount[currentPlayer] = 0;
+            
+            if (G.deckCount[currentPlayer] > 1){
+                G.deck[currentPlayer][G.deckCount[currentPlayer]-1] = gold;
+                G.deck[currentPlayer][G.deckCount[currentPlayer]-2] = silver;
+            }
+            else {
+                G.discard[currentPlayer][G.discardCount[currentPlayer]-1] = gold;
+                G.discard[currentPlayer][G.discardCount[currentPlayer]-2] = silver;
+            }
 
             //give player adventurer
             G.hand[currentPlayer][0] = adventurer;
@@ -86,12 +95,6 @@ int main()
             
             //test for correct hand count (+2 treasure, -1 discard adventurer)
             assert(G.handCount[currentPlayer] == pre.handCount[currentPlayer] + 1);
-            
-            //test for correct deck count (-2 treasure)
-            assert(G.deckCount[currentPlayer] <= pre.deckCount[currentPlayer] - 2);
-            
-            //test for maybe discarding cards
-            assert(G.discardCount[currentPlayer] <= (pre.discardCount[currentPlayer]));
             
             //test for playing 1 card
             assert(G.playedCardCount == (pre.playedCardCount + 1));
