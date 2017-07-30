@@ -12,16 +12,16 @@
 
 int failedAssert = 0;
 
-inline void testingAssert(const char* failed, const char* file, int line) 
+inline void testingAssert(const char* failed, const char* file, int line)
 {
-	failedAssert++;
-	printf("Assert failed: {%s}, file %s, line %d.\n", failed, file, line);
+    failedAssert++;
+    printf("Assert failed: {%s}, file %s, line %d.\n", failed, file, line);
 }
 
-void checkTest() 
+void checkTest()
 {
-	if (failedAssert == 0)
+    if (failedAssert == 0)
         printf("All tests passed!\n");
-	else
+    else
         printf("Test failed: %d failed assertions\n", failedAssert);
 }
