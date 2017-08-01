@@ -1,294 +1,85 @@
-/*********************************************************************
- 
- ** Authors: Phillip Proulx
- 
- ** Date: 07/15/2017
- 
- ** Description: Unit tests for the Village Card
- 
-  ** Referenced: Provided previous student cardtest4.c code
- 
- *********************************************************************/
+/***********************************************************
+ * Author:          Kelsey Helms
+ * Date Created:    July 6, 2017
+ * Filename:        cardtest4.c
+ *
+ * Overview:
+ * This file tests the card Village.
+ ************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#include "rngs.h"
-#include <stdlib.h>
+#include "testing.h"
 
-/*********************************************************************
- 
- ** Description: An assertion function that prints whether the two parameters
- are the same indicating a passed test or if they are differnt which indicates
- a failing test.
- 
- *********************************************************************/
-void asserttrue(int param1, int param2)
+int main (int argc, char** argv)
 {
-    if(param1 == param2)
-    {
-        printf("TEST SUCCESSFULLY COMPLETED\n\n");
-    }
-    else
-    {
-        printf("TEST FAILED\n\n");
-    }
-}
+    //set up game
+    int numPlayers;
+    int seed;
+    int i, j;
+    int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse, sea_hag, tribute, smithy};
+    struct gameState G, pre;
+    
+    printf("Testing Village card\n");
+    
+    //get valid amount of players and random seed
+    numPlayers = rand() % 3 + 2;
+    seed = rand();
+    
+    //initialize game
+    initializeGame(numPlayers, k, seed, &G);
+	
+    //give player village
+	G.hand[0][0] = village;
+    
+    //copy to pre gamestate
+    memcpy(&pre, &G, sizeof(struct gameState));
+	
+    //play village
+	int returnValue = playCard(0, 0, 0, 0, &G);
+	assert(returnValue == 0);
 
-int main() {
+    //test for correct hand count
+	assert(G.handCount[0] == pre.handCount[0] + 1 - 1);
     
-    int playerNum = 2;
-    int randomizer = 10;
-    int villageBool = 1;
-
+    //test for correct action count (+2 action, -1 taken)
+	assert(G.numActions == (pre.numActions + 2 - 1));
     
-    int k[10] = {adventurer, embargo, village, minion, mine, cutpurse,
-        sea_hag, tribute, smithy, feast};
+    //test for discarding played card
+    assert(G.hand[0][0] != village);
     
-    
-    
-    struct gameState GS;        //Original Game State
-    struct gameState testGS;    //Modified Test Game State for comparision
-    
-    //Initialize original game for comparision
-    initializeGame(playerNum, k, randomizer, &GS);
-    
-    printf("----------------- Testing Function (Village Card) ----------------\n");
-    
-    //TEST 1 - Check gain card mechanic
-    
-    printf("TEST 1 - Village pulls 1 card from deck.\n");
-    printf("The players hand has 5 cards, all are village cards.\n");
-    printf("The players deck has 5 cards and they are all gold cards.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.discardCount[0] = 0;
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = gold;
-    testGS.deck[0][3] = gold;
-    testGS.deck[0][4] = gold;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = village;
-    testGS.hand[0][1] = village;
-    testGS.hand[0][2] = village;
-    testGS.hand[0][3] = village;
-    testGS.hand[0][4] = village;
-    
-    cardEffect(village, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("After playing the village card the user should have 5 cards in their hand. 4 Village cards and 1 Gold Card\n");
-    
-    if(testGS.handCount[0] != 5)
+    //test for state changes to other players
+    for (i = 1; i < numPlayers; i++)
     {
-        villageBool = 0;
-    }
-    
-    if(testGS.hand[0][0] != gold)
-    {
-        villageBool = 0;
-    }
-    
-    asserttrue(villageBool, 1);
-    
-    villageBool = 1; //Reset villageBool
-    
-    //TEST 2 - Check discard mechanic
-    
-    printf("TEST 2 - Village properly leaves hand into played pile after being played.\n");
-    printf("The players hand has 5 cards, all are village cards.\n");
-    printf("The players played deck starts empty.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.playedCardCount = 0;
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = gold;
-    testGS.deck[0][3] = gold;
-    testGS.deck[0][4] = gold;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = village;
-    testGS.hand[0][1] = village;
-    testGS.hand[0][2] = village;
-    testGS.hand[0][3] = village;
-    testGS.hand[0][4] = village;
-    
-    cardEffect(village, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("After playing the village card the user should have 1 played card and that is a village.\n");
-    
-    if(testGS.playedCardCount != 1)
-    {
-        villageBool = 0;
-    }
-    
-    if(testGS.playedCards[0] != village)
-    {
-        villageBool = 0;
-    }
-    
-    asserttrue(villageBool, 1);
-    
-    villageBool = 1; //Reset villageBool
-    
-    //TEST 3 - Check action mechanic
-    
-    printf("TEST 3 - Village properly adds +2 action points.\n");
-    printf("The players hand has 5 cards, all are village cards.\n");
-    printf("The player starts with 1 action point.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.numActions = 1;
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = gold;
-    testGS.deck[0][3] = gold;
-    testGS.deck[0][4] = gold;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = village;
-    testGS.hand[0][1] = village;
-    testGS.hand[0][2] = village;
-    testGS.hand[0][3] = village;
-    testGS.hand[0][4] = village;
-    
-    cardEffect(village, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("After playing the village card the user should have 2 actions points remaining.\n");
-
-    printf("Actual Value: %d\n", testGS.numActions);
-    asserttrue(testGS.numActions, 2);
-    
-    //TEST 4 - Village does not affect supply deck
-    
-    villageBool = 1;
-    
-    printf("TEST 4 - Village does not pull from supply deck.\n");
-    printf("The players hand has 5 cards, all are village cards.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    printf("Saving counts from vicotry piles and kingdom piles before playing Village.\n");
-    
-    int saveCount[27];
-    int index = 0;
-    
-    for(index = 0; index < 28; index++)
-    {
-        saveCount[index] = testGS.supplyCount[index];
-    }
-    
-    
-    testGS.numActions = 1;
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = gold;
-    testGS.deck[0][3] = gold;
-    testGS.deck[0][4] = gold;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = village;
-    testGS.hand[0][1] = village;
-    testGS.hand[0][2] = village;
-    testGS.hand[0][3] = village;
-    testGS.hand[0][4] = village;
-    
-    cardEffect(village, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The saved counts should match the original counts.\n");
-    
-    index = 0;
-    
-    for(index = 0; index < 28; index++)
-    {
-        if(saveCount[index] != testGS.supplyCount[index])
+        assert(G.handCount[i] == pre.handCount[i]);
+        assert(G.deckCount[i] == pre.deckCount[i]);
+        assert(G.discardCount[i] == pre.discardCount[i]);
+        
+        for (j = 0; j < G.handCount[i]; j++)
+            assert(G.hand[i][j] == pre.hand[i][j]);
+        
+        for (j = 0; j < G.deckCount[i]; j++)
         {
-            villageBool = 0;
+            assert(G.deck[i][j] == pre.deck[i][j]);
+            assert(G.discard[i][j] == pre.discard[i][j]);
         }
     }
     
-    asserttrue(villageBool, 1);
+    //test for state changes to kingdom and victory piles
+    assert(supplyCount(estate, &G) == supplyCount(estate, &pre));
+    assert(supplyCount(duchy, &G) == supplyCount(duchy, &pre));
+    assert(supplyCount(province, &G) == supplyCount(province, &pre));
     
-    //TEST 5 - Village does not affect other players
-    
-    villageBool = 1;
-    
-    printf("TEST 5 - Village does not affect other players.\n");
-    printf("Player 1 has no affect on Player 2's deck counts, hand counts, and discard counts.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    printf("Saving player 2 counts before player 1 plays.\n");
-    int discard2 = testGS.discardCount[1];
-    int deck2 = testGS.deckCount[1];
-    int hand2 = testGS.handCount[1];
-    
-    
-    testGS.numActions = 1;
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = gold;
-    testGS.deck[0][3] = gold;
-    testGS.deck[0][4] = gold;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = village;
-    testGS.hand[0][1] = village;
-    testGS.hand[0][2] = village;
-    testGS.hand[0][3] = village;
-    testGS.hand[0][4] = village;
-    
-    cardEffect(village, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The saved counts should match the original counts.\n");
-    
-    if(discard2 != testGS.discardCount[1])
+    for (i = 0; i < 10; i++)
     {
-        villageBool = 0;
+        assert(supplyCount(k[i], &G) == supplyCount(k[i], &pre));
     }
-    
-    if(deck2 != testGS.deckCount[1])
-    {
-        villageBool = 0;
-    }
-    
-    if(hand2 != testGS.handCount[1])
-    {
-        villageBool = 0;
-    }
-    
-    
-    asserttrue(villageBool, 1);
-    
-    
-    return 0;
+	
+    //check the tests
+	checkTest();
+	
+	return 0;
 }
-
-

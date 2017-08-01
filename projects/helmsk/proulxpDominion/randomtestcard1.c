@@ -1,229 +1,137 @@
-/*********************************************************************
- 
- ** Authors: Phillip Proulx
- 
- ** Date: 07/27/2017
- 
- ** Description: Random tester for Smithy Card
- 
- ** Referenced: I referenced testDrawCard.c and Lecture 11.
- 
- *********************************************************************/
+/***********************************************************
+ * Author:          Kelsey Helms
+ * Date Created:    July 24, 2017
+ * Filename:        randomtestcard1.c
+ *
+ * Overview:
+ * This file randomly tests the card Village.
+ ************************************************************/
 
-
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <stddef.h>
+#include <string.h>
+#include "testing.h"
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#include "rngs.h"
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
 
-//GLOBAL VARIABLE - Used to keep track of total failing tests during testing
-int failCount = 0;
+#define MAX_TESTS 2000
 
-/*********************************************************************
- 
- ** Description: An assertion function that prints whether the two parameters
- are the same indicating a passed test or if they are differnt which indicates
- a failing test.
- 
- *********************************************************************/
-void asserttrue(int param1, int param2)
+void ignoreINT(int signo) {
+    fprintf(stderr, "A signal was triggered: %d\n", signo);
+}
+
+int main()
 {
-    if(param1 == param2)
+    /* set up structure to specify new action */
+    struct sigaction new_action;
+    // signal handler ignoreINT prints newline character
+    new_action.sa_handler = ignoreINT;
+    // fill sa_mask with all signal types
+    sigfillset(&(new_action.sa_mask));
+    // set no flags
+    new_action.sa_flags = 0;
+    
+    // Set sigaction to respond to SIGABRT, SIGTERM, SIGSEGV
+    sigaction(SIGABRT, &new_action, NULL);
+    sigaction(SIGTERM, &new_action, NULL);
+    sigaction(SIGSEGV, &new_action, NULL);
+    
+    //set up game
+    int numPlayers, currentPlayer;
+    int seed;
+    int test, i, j;
+    int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse, sea_hag, tribute, smithy};
+    struct gameState G, pre;
+    
+    printf("Testing Village card\n");
+	
+	for (test = 0; test < MAX_TESTS; test++)
     {
-        printf("TEST SUCCESSFULLY COMPLETED\n\n");
-    }
-    else
-    {
-        printf("TEST FAILED\n\n");
-        failCount++;
-    }
-}
-
-
-/*********************************************************************
- 
- ** Description: An oracle function called checkSmithyCard() this function
- checks the execution of the smithy card using a set of random inputs
- in the passed game state.
- 
- Referenced: checkDrawCard() in testDrawCard.c
- 
- *********************************************************************/
-int checkSmithyCard(int playerIndex, int testHandPos, struct gameState *afterState) {
-    
-    //New game state for comparision
-    struct gameState beforeState;
-    
-    //Chooses current players tern based on fed player index
-    afterState->whoseTurn = playerIndex;
-    
-    //Randomly selects game states played card count
-    afterState->playedCardCount = floor(Random() * MAX_HAND);
-    
-    //Copies before and after game state for comparison
-    memcpy (&beforeState, afterState, sizeof(struct gameState));
-    
-    //Call cardEffect on smithy card
-    cardEffect(smithy, 0, 0, 0, afterState, testHandPos, 0);
-    
-    int index = 0;  //Index for 3 card draws
-    
-    //Loop to simulate drawing three cards on before state
-    for(index = 0; index < 3; index++)
-    {
-        //If the card has cards in the deck
-        if (beforeState.deckCount[playerIndex] > 0)
+        //get valid amount of players and random seed
+        numPlayers = rand() % 3 + 2;
+        seed = rand();
+        
+        //initialize game
+        initializeGame(numPlayers, k, seed, &G);
+		
+        //test every player
+		for (currentPlayer = 0; currentPlayer < numPlayers; currentPlayer++)
         {
-            //Increment hand count
-            beforeState.handCount[playerIndex]++;
+			//pick random deck size out of MAX_DECK size
+            G.whoseTurn = currentPlayer;
+            G.discardCount[currentPlayer] = rand() % MAX_DECK;
+            G.handCount[currentPlayer] = (rand() % MAX_HAND) - G.discardCount[currentPlayer];
+            G.deckCount[currentPlayer] = (rand() % MAX_DECK) - G.discardCount[currentPlayer] - G.handCount[currentPlayer];
             
-            //Take top card from deck
-            beforeState.hand[playerIndex][beforeState.handCount[playerIndex]-1] = beforeState.deck[playerIndex][beforeState.deckCount[playerIndex]-1];
+			//1 in 3 chance of making empty deck for coverage
+			if (seed % 3 == 0)
+				G.deckCount[currentPlayer] = 0;
+			
+            //give player village card
+            G.hand[currentPlayer][0] = village;
             
-            //Decrement deck count
-            beforeState.deckCount[playerIndex]--;
+            //copy to pre gamestate
+            memcpy(&pre, &G, sizeof(struct gameState));
             
-        }
-        else if (beforeState.discardCount[playerIndex] > 0) //If the player has no cards in deck simulate discard draw
-        {
-            //Copies over shuffled state from after state
-            memcpy(beforeState.deck[playerIndex], afterState->deck[playerIndex], sizeof(int) * beforeState.discardCount[playerIndex]);
-            memcpy(beforeState.discard[playerIndex], afterState->discard[playerIndex], sizeof(int)*beforeState.discardCount[playerIndex]);
+            //play village card
+			int returnValue = cardEffect(village, 0, 0, 0, &G, 0, 0);
+            assert(returnValue == 0);
+			
+            //test for correct hand count (+1 drawn, -1 discard played card)
+            assert(G.handCount[currentPlayer] == pre.handCount[currentPlayer]);
             
-            //Prevents bug from discard mechanic from not catching discard from hand position
-            if(index == 2)
+            //test for correct action count (+2 action)
+            assert(G.numActions == (pre.numActions + 2));
+            
+            //test for correct deck count
+            assert(G.deckCount[currentPlayer] == (pre.deckCount[currentPlayer] - 1));
+            
+            //test for playing 1 card
+            assert(G.playedCardCount == (pre.playedCardCount + 1));
+            
+            //test for discarding played card
+            assert(G.hand[currentPlayer][0] != village);
+            
+            //test for state changes to other players
+            for (i = 0; i < numPlayers; i++)
             {
-                beforeState.hand[playerIndex][beforeState.handCount[playerIndex]] = afterState->hand[playerIndex][testHandPos];
-            }
-            else
-            {
-               beforeState.hand[playerIndex][beforeState.handCount[playerIndex]] = afterState->hand[playerIndex][beforeState.handCount[playerIndex]];
+                if (i != currentPlayer)
+                {
+                    assert(G.handCount[i] == pre.handCount[i]);
+                    assert(G.deckCount[i] == pre.deckCount[i]);
+                    assert(G.discardCount[i] == pre.discardCount[i]);
+                    
+                    for (j = 0; j < G.handCount[i]; j++)
+                    {
+                        assert(G.hand[i][j] == pre.hand[i][j]);
+                    }
+                    
+                    for (j = 0; j < G.deckCount[i]; j++)
+                    {
+                        assert(G.deck[i][j] == pre.deck[i][j]);
+                        assert(G.discard[i][j] == pre.discard[i][j]);
+                    }
+                }
             }
             
-            //Updates hand count, deck count, and discard count
-            beforeState.handCount[playerIndex]++;
-            beforeState.deckCount[playerIndex] = beforeState.discardCount[playerIndex]-1;
-            beforeState.discardCount[playerIndex] = 0;
-        }
-        
-
-    }
-    
-
-    //Simulate Discard
-    beforeState.playedCards[beforeState.playedCardCount] = beforeState.hand[playerIndex][testHandPos];
-    beforeState.playedCardCount++;
-    
-    //set played card to -1
-    beforeState.hand[playerIndex][testHandPos] = -1;
-    
-    //remove card from player's hand
-    if ( testHandPos == (beforeState.handCount[playerIndex] - 1) ) 	//last card in hand array is played
-    {
-        //reduce number of cards in hand
-        beforeState.handCount[playerIndex]--;
-    }
-    else
-    {
-
-        //replace discarded card with last card in hand
-        beforeState.hand[playerIndex][testHandPos] = beforeState.hand[playerIndex][ (beforeState.handCount[playerIndex] - 1)];
-        //set last card to -1
-        beforeState.hand[playerIndex][beforeState.handCount[playerIndex] - 1] = -1;
-        //reduce number of cards in hand
-        beforeState.handCount[playerIndex]--;
-    }
-    
-    //Compare memory size of before and after state
-    asserttrue(memcmp(&beforeState, afterState, sizeof(struct gameState)), 0);
-    
-    return 0;
+            //test for state changes to kingdom and victory piles
+            assert(supplyCount(estate, &G) == supplyCount(estate, &pre));
+            assert(supplyCount(duchy, &G) == supplyCount(duchy, &pre));
+            assert(supplyCount(province, &G) == supplyCount(province, &pre));
+            
+            for (i = 0; i < 10; i++)
+            {
+                assert(supplyCount(k[i], &G) == supplyCount(k[i], &pre));
+            }
+		}
+	}
+	
+	checkTest();
+	
+	return 0;
 }
 
-int main () {
-    
 
-    int index;  //Index for cycle game state generation
-    int numTests;   //Index for number of tests
-    int totalPlayers;   //Holds total number of players 2-4
-    int testHandPos;    //Random hand position chosen from total hand count.
-    int randomizer;     //Random integer from 0 500 to seed game.
-    int playerIndex;    //Random player index to test checkSmithyCard()
-    
-    clock_t t1, t2;  //Initialize time variables
-    
-    //Seeds supply with chosen cards
-    int k[10] = {adventurer, embargo, village, minion, mine, cutpurse,
-        sea_hag, tribute, smithy, council_room};
-    
-    
-    struct gameState GS;
-    
-    printf ("TESTING SMITHY CARD.\n");
 
-    //Based off of testDrawCard.c
-    SelectStream(2);
-    PutSeed(3);
-    
-    t1 = clock();
-    
-    //Cycles through test cases
-    for (numTests = 0; numTests < 2000; numTests++) {
-        for (index = 0; index < sizeof(struct gameState); index++) {
-            ((char*)&GS)[index] = floor(Random() * 256);
-        }
-        
-        //Random total player count from 2 to 4
-        totalPlayers = floor(Random() * 3) + 2;
-        
-        //Random int from 0 to 500
-        randomizer = floor(Random() * 500);
-        
-        //Sets up game state
-        initializeGame(totalPlayers, k, randomizer, &GS);
-        
-        //Choose random player index based on total players
-        playerIndex = floor(Random() * totalPlayers);
-        
-        GS.deckCount[playerIndex] = floor(Random() * MAX_DECK);     //Random deck Count
-        GS.discardCount[playerIndex] = floor(Random() * MAX_DECK);  //Random discard Count
-        GS.handCount[playerIndex] = floor(Random() * MAX_HAND);     //Random hand Count
-    
-        
-        //Sets passed handposition to a random position in players current hand
-        testHandPos = floor(Random() * GS.handCount[playerIndex]);
-        
-        printf("Testing Player Index: %d, DeckCount: %d, DiscardCount: %d, HandCount: %d\n", playerIndex, GS.deckCount[playerIndex], GS.discardCount[playerIndex], GS.handCount[playerIndex]);
-        
-        checkSmithyCard(playerIndex, testHandPos, &GS);
-    }
-    
-    t2 = clock();
-    
-    
-    //Output statements to the user.
-    if(failCount == 0)
-    {
-      printf ("ALL TESTS PASSED\n");
-    }
-    else
-    {
-      printf ("THERE WERE FAILURES\n");
-    }
-    
-    printf("Number of Failures: %d\n", failCount);
-    
-    //Referenced: https://stackoverflow.com/questions/1083142/what-s-the-correct-way-to-use-printf-to-print-a-clock-t
-    printf("The random tester ran in (sec): %Lf\n", ((long double)(t2 - t1))/CLOCKS_PER_SEC);
-
-    
-    exit(0);
-    
-    return 0;
-}

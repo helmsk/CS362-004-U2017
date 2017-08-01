@@ -1,283 +1,89 @@
-/*********************************************************************
- 
- ** Authors: Phillip Proulx
- 
- ** Date: 07/15/2017
- 
- ** Description: Unit tests for the Adventuerer Card
- 
-  ** Referenced: Provided previous student cardtest4.c code
- 
- *********************************************************************/
+/***********************************************************
+ * Author:          Kelsey Helms
+ * Date Created:    July 6, 2017
+ * Filename:        cardtest1.c
+ *
+ * Overview:
+ * This file tests the card Adventurer.
+ ************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include <string.h>
-#include <stdio.h>
-#include "rngs.h"
-#include <stdlib.h>
+#include "testing.h"
 
-/*********************************************************************
- 
- ** Description: An assertion function that prints whether the two parameters
- are the same indicating a passed test or if they are differnt which indicates
- a failing test.
- 
- *********************************************************************/
-void asserttrue(int param1, int param2)
+int main ()
 {
-    if(param1 == param2)
+    //set up game
+    int numPlayers;
+    int seed;
+    int i, j;
+    int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse, sea_hag, tribute, smithy};
+    struct gameState G, pre;
+    
+    printf("Testing Adventurer card\n");
+    
+    //get valid amount of players and random seed
+    numPlayers = rand() % 3 + 2;
+    seed = rand();
+    
+    //initialize game
+    initializeGame(numPlayers, k, seed, &G);
+    
+    //give player adventurer
+    G.hand[0][0] = adventurer;
+    
+    //copy to pre gamestate
+    memcpy(&pre, &G, sizeof(struct gameState));
+    
+    //play adventurer
+    int returnValue = playCard(0, 0, 0, 0, &G);
+    assert(returnValue == 0);
+    
+    //test for two drawn treasure cards
+    assert(G.hand[0][G.handCount[0]-1] == gold || G.hand[0][G.handCount[0]-1] == silver || G.hand[0][G.handCount[0]-1] == copper);
+    assert(G.hand[0][G.handCount[0]-2] == gold || G.hand[0][G.handCount[0]-2] == silver || G.hand[0][G.handCount[0]-2] == copper);
+    
+    //test for correct hand count (+2 treasure, -1 discard adventurer)
+    assert(G.handCount[0] == pre.handCount[0] + 2 - 1);
+    
+    //test for correct deck count (-2 treasure)
+    assert(G.deckCount[0] <= pre.deckCount[0] - 2);
+    
+    //test for discarding played card
+    assert(G.hand[0][0] != adventurer);
+    
+    //test for state changes to other players
+    for (i = 1; i < numPlayers; i++)
     {
-        printf("TEST SUCCESSFULLY COMPLETED\n\n");
+        assert(G.handCount[i] == pre.handCount[i]);
+        assert(G.deckCount[i] == pre.deckCount[i]);
+        assert(G.discardCount[i] == pre.discardCount[i]);
+        
+        for (j = 0; j < G.handCount[i]; j++)
+            assert(G.hand[i][j] == pre.hand[i][j]);
+        
+        for (j = 0; j < G.deckCount[i]; j++)
+        {
+            assert(G.deck[i][j] == pre.deck[i][j]);
+            assert(G.discard[i][j] == pre.discard[i][j]);
+        }
     }
-    else
+    
+    //test for state changes to kingdom and victory piles
+    assert(supplyCount(estate, &G) == supplyCount(estate, &pre));
+    assert(supplyCount(duchy, &G) == supplyCount(duchy, &pre));
+    assert(supplyCount(province, &G) == supplyCount(province, &pre));
+    
+    for (i = 0; i < 10; i++)
     {
-        printf("TEST FAILED\n\n");
+        assert(supplyCount(k[i], &G) == supplyCount(k[i], &pre));
     }
+    
+    //check the tests
+    checkTest();
+
+	return 0;
 }
-
-
-int main() {
-   
-    int playerNum = 2;
-    int randomizer = 10;
-    int trueBool = 1;
-    
-    int k[10] = {adventurer, embargo, village, minion, mine, cutpurse,
-        sea_hag, tribute, smithy, council_room};
-    
-    
-    struct gameState GS;        //Original Game State
-    struct gameState testGS;    //Modified Test Game State for comparision
-    
-    //Initialize original game for comparision
-    initializeGame(playerNum, k, randomizer, &GS);
-    
-    printf("----------------- Testing Function (Adventurer Card) ----------------\n");
-    
-    //TEST 1 - Check drawing mechanic
-    
-    printf("TEST 1 - Adventurer stops drawing after 2 treasure cards are pulled\n");
-    printf("The players hand has 5 cards and all are adventurer.\n");
-    printf("The players deck has 5 cards and they are all silver cards.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = silver;
-    testGS.deck[0][1] = silver;
-    testGS.deck[0][2] = silver;
-    testGS.deck[0][3] = silver;
-    testGS.deck[0][4] = silver;
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = adventurer;
-    testGS.hand[0][1] = adventurer;
-    testGS.hand[0][2] = adventurer;
-    testGS.hand[0][3] = adventurer;
-    testGS.hand[0][4] = adventurer;
-    
-    cardEffect(adventurer, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The players hand should only have 2 silver cards.\n");
-    
-    int index = 0;
-    int silverCount = 0;
-    
-    for(index = 0; index < testGS.handCount[0]; index++)
-    {
-        if(testGS.hand[0][index] == silver)
-        {
-            silverCount++;
-        }
-    }
-    
-    printf("Actual Value: %d\n", silverCount);
-    asserttrue(silverCount, 2);
-    
-    trueBool = 1; //Reset boolean
-    
-    //TEST 2 - Check drawing mechanic 2
-    
-    printf("TEST 2 - Adventurer stops drawing after 2 treasure cards are pulled (again)\n");
-    printf("The players hand has 5 cards and all are adventurer.\n");
-    printf("The players deck has 5 cards and they are 2 gold, 2 silver, and 1 copper.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = silver;
-    testGS.deck[0][3] = silver;
-    testGS.deck[0][4] = copper;
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = adventurer;
-    testGS.hand[0][1] = adventurer;
-    testGS.hand[0][2] = adventurer;
-    testGS.hand[0][3] = adventurer;
-    testGS.hand[0][4] = adventurer;
-    
-    cardEffect(adventurer, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The players hand should only have 6 cards.\n");
-    
-    printf("Actual Value: %d\n", testGS.handCount[0]);
-    asserttrue(testGS.handCount[0], 6);
-    
-    //TEST 3 - Cards kept are only treasure
-    
-    printf("TEST 3 - Adventurer only keeps treasure cards in hand.\n");
-    printf("The players hand has 5 cards and all are adventurer.\n");
-    printf("The players deck has 5 cards and they are 2 gold, 2 smithy, and 1 mine.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.deckCount[0] = 5;
-    testGS.deck[0][0] = gold;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = smithy;
-    testGS.deck[0][3] = smithy;
-    testGS.deck[0][4] = mine;
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = adventurer;
-    testGS.hand[0][1] = adventurer;
-    testGS.hand[0][2] = adventurer;
-    testGS.hand[0][3] = adventurer;
-    testGS.hand[0][4] = adventurer;
-    
-    cardEffect(adventurer, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The players hand should only contain adventuerer or gold cards.\n");
-    
-    index = 0;
-    int otherCount = 0;
-    
-    for(index = 0; index < testGS.handCount[0]; index++)
-    {
-        if(testGS.hand[0][index] != adventurer && testGS.hand[0][index] != gold)
-        {
-            otherCount++;
-        }
-    }
-    
-    printf("Actual Value: %d\n", otherCount);
-    asserttrue(otherCount, 0);
-    
-    trueBool = 1; //Reset boolean
-    
-    //TEST 4 - Test discard to deck mechanic
-    
-    printf("TEST 4 - Adventurer should take discard and place into deck if deck is empty.\n");
-    printf("The players hand has 5 cards and all are adventurer.\n");
-    printf("The players deck is empty and the players discard pile has 5 gold cards.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.deckCount[0] = 0;
-    
-    testGS.discardCount[0] = 5;
-    testGS.discard[0][0] = gold;
-    testGS.discard[0][1] = gold;
-    testGS.discard[0][2] = gold;
-    testGS.discard[0][3] = gold;
-    testGS.discard[0][4] = gold;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = adventurer;
-    testGS.hand[0][1] = adventurer;
-    testGS.hand[0][2] = adventurer;
-    testGS.hand[0][3] = adventurer;
-    testGS.hand[0][4] = adventurer;
-    
-    cardEffect(adventurer, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The players deck should have 3 cards and all are gold cards.\n");
-    
-    index = 0;
-    int goldCount = 0;
-    
-    for(index = 0; index < testGS.deckCount[0]; index++)
-    {
-        if(testGS.deck[0][index] == gold)
-        {
-            goldCount++;
-        }
-    }
-    
-    if(testGS.deckCount[0] != 3 || goldCount != 3)
-    {
-        trueBool = 0;
-    }
-    
-    
-    asserttrue(trueBool, 1);
-    
-    trueBool = 1;  //Reset bool
-    
-    //TEST 5 - Test discard mechanic
-    
-    printf("TEST 5 - Adventurer should take all non-treasure cards pulled and place into discard.\n");
-    printf("The players hand has 5 cards and all are adventurer.\n");
-    printf("The discard pile is empty to start.\n");
-    printf("The players deck has 6 cards the top 3 are smithy, the next 2 are gold cards, and the last card is a smithy.\n");
-    
-    //Copies fresh game state to test game state
-    memcpy(&testGS, &GS, sizeof(struct gameState));
-    
-    testGS.deckCount[0] = 0;
-    
-    testGS.discardCount[0] = 0;
-    
-    testGS.deckCount[0] = 6;
-    testGS.deck[0][0] = smithy;
-    testGS.deck[0][1] = gold;
-    testGS.deck[0][2] = gold;
-    testGS.deck[0][3] = smithy;
-    testGS.deck[0][4] = smithy;
-    testGS.deck[0][5] = smithy;
-    
-    
-    testGS.handCount[0] = 5;
-    testGS.hand[0][0] = adventurer;
-    testGS.hand[0][1] = adventurer;
-    testGS.hand[0][2] = adventurer;
-    testGS.hand[0][3] = adventurer;
-    testGS.hand[0][4] = adventurer;
-    
-    cardEffect(adventurer, 0, 0, 0, &testGS, 0, 0);
-    
-    printf("The players hand should only have 7 cards and the last two should be gold cards.\n");
-    printf("The discard pile should only have 4 cards and those 4 cards are 3 smithy and the adventurer.\n");
-    
-    if(testGS.handCount[0] != 7)
-    {
-        trueBool = 0;
-    }
-    
-    if(testGS.hand[0][5] != gold || testGS.hand[0][6] != gold)
-    {
-        trueBool = 0;
-    }
-    
-    if(testGS.discardCount[0] != 4)
-    {
-        trueBool = 0;
-    }
-    
-    asserttrue(trueBool, 1);
-    
-
-    
-    
-    return 0;
-}
-
-
