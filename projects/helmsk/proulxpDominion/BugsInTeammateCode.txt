@@ -1,0 +1,53 @@
+Kelsey Helms
+CS 362 Software Engineering 2
+30 July 2017
+Bugs In Teammate's Code
+
+Bug Reports:
+
+
+Unit test 1: Testing isGameOver(): All tests passed.
+
+Unit test 2: Testing numHandCards(): All tests passed.
+
+Unit test 3: Testing supplyCount(): All tests passed.
+
+Unit test 4: Testing updateCoins(): All tests passed.
+
+Card test 1: Testing Adventurer card: 
+Assert failed: {G.handCount[0] == pre.handCount[0] + 2 - 1}, file cardtest1.c, line 50.
+Assert failed: {G.hand[0][0] != adventurer}, file cardtest1.c, line 56.
+
+Card test 2: Testing Gardens card:
+Assert failed: {returnValue == 0}, file cardtest2.c, line 43.
+Assert failed: {G.handCount[0] == (pre.handCount[0] - 1)}, file cardtest2.c, line 46.
+Assert failed: {G.hand[0][0] != gardens}, file cardtest2.c, line 52.
+
+Card test 3: Testing Smithy card:
+Assert failed: {G.handCount[0] == (pre.handCount[0] + 3 - 1)}, file cardtest3.c, line 46.
+
+Card test 4: Testing Village card:
+Assert failed: {G.numActions == (pre.numActions + 2 - 1)}, file cardtest4.c, line 49.
+
+Random test card 1: Testing Village card:
+Assert failed: {G.numActions == (pre.numActions + 2)}, file randomtestcard1.c, line 86.
+Assert failed: {G.deckCount[currentPlayer] == (pre.deckCount[currentPlayer] - 1)}, file randomtestcard1.c, line 89.
+
+Random test card 2: Testing Great_Hall card:
+Assert failed: {G.deckCount[currentPlayer] == (pre.deckCount[currentPlayer] - 1)}, file randomtestcard2.c, line 89.
+
+Random test adventurer: Testing Adventurer card:
+Assert failed: {G.handCount[currentPlayer] == pre.handCount[currentPlayer] + 1}, file randomtestadventurer.c, line 97.
+Assert failed: {G.playedCardCount == (pre.playedCardCount + 1)}, file randomtestadventurer.c, line 100.
+Assert failed: {G.hand[currentPlayer][0] != adventurer}, file randomtestadventurer.c, line 103.
+
+
+Adventurer: The second failed assert in the unit card test shows that the function isn’t discarding the played card because it is still the top hand card. This is correct. When looking at the code, all of the overturned cards are discarded, but the played card isn’t. This is also backed up by the added failed assert in random adventurer test, which shows that the played card count doesn’t increase. The first failed assert in the unit card test shows that the hand count is wrong, which could be related to the second assert, or it could be for a different reason. A quick look at the code shows that the bug added by Phillip is to increase the drawn treasure count to 3. Two bugs were found in adventurer, with two failed asserts in the unit tests and three failed asserts in the random tests.
+
+Gardens: The gardens card was only tested in the unit card tests, but every assert that tested a real change failed. The only asserts that passed were asserts that checked for no changes. It is obvious from taking a second’s look at the code of why this is the case; the function does nothing except return -1! Although this is a huge bug, I only counted it as one bug. This is a bug that I already knew to exist from my first time running this test in assignment 3, so it is not one that Phillip added.
+
+Great Hall: The great_hall card was only tested in the random card tests. I only encountered the incorrect deck count from drawing or discarding that I also encountered when I ran this test the first time in assignment 4.
+
+Smithy: The smithy card was only test in the unit card tests. I encountered one failed assert for an incorrect hand count. The only bug I encountered the first time I ran this test in assignment 2 was the bug I introduced that led to the incorrect being discarded, so I knew that this bug for incorrect hand count must be a new one that Phillip introduced. Sure enough, taking a look at the code reveals that he has the user draw 5 cards instead of 3.
+
+Village: The only failed assert in the unit card tests matches the first failed assert in the random card tests. This shows that there is an incorrect number of actions. This was not a failed assert I had seen before, so I figured it must be another one from Phillip. When looking at the code, it can be seen that he subtracted an action instead of adding an action. The second failed assert in the random card test was the same one that is seen in great_hall of an incorrect deck count. This is from a utilized function, not within the card function itself. Both great_hall and village use draw and discard, which could mess up the deck count.
