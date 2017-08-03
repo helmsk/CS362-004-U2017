@@ -646,16 +646,16 @@ int getCost(int cardNumber)
 
 
 
-void adventurerEffect(struct gameState *state, int currentPlayer, int drawntreasure, int cardDrawn, int temphand[], int z)
+void adventurerEffect(struct gameState *state, int currentPlayer, int drawntreasure, int cardDrawn, int temphand[], int z, int handPos)
 {
-    while(drawntreasure<2){
+    while(drawntreasure<2 && z < MAX_HAND){
         if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
             shuffle(currentPlayer, state);
         }
         drawCard(currentPlayer, state);
         cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];//top card of hand is most recently drawn card.
         if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
-            drawntreasure = drawntreasure+2;
+            drawntreasure++;
         else{
             temphand[z]=cardDrawn;
             state->handCount[currentPlayer]--; //this should just remove the top card (the most recently drawn one).
@@ -666,6 +666,8 @@ void adventurerEffect(struct gameState *state, int currentPlayer, int drawntreas
         state->discard[currentPlayer][state->discardCount[currentPlayer]++]=temphand[z-1]; // discard all cards in play that have been drawn
         z=z-1;
     }
+
+    discardCard(handPos, currentPlayer, state, 0);
 }
 
 void smithyEffect(struct gameState *state, int currentPlayer, int handPos)
@@ -823,7 +825,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
   switch( card ) 
     {
     case adventurer:
-            adventurerEffect(state, currentPlayer, drawntreasure, cardDrawn, temphand, z);
+            adventurerEffect(state, currentPlayer, drawntreasure, cardDrawn, temphand, z, handPos);
             return 0;
 			
     case council_room:

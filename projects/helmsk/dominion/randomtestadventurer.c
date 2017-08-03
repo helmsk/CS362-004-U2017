@@ -90,11 +90,16 @@ int main()
 
             
             //test for two drawn treasure cards
-            assert(G.hand[currentPlayer][G.handCount[currentPlayer]-1] == gold || G.hand[currentPlayer][G.handCount[currentPlayer]-1] == silver || G.hand[currentPlayer][G.handCount[currentPlayer]-1] == copper);
-            assert(G.hand[currentPlayer][G.handCount[currentPlayer]-2] == gold || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == silver || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == copper);
-            
+            assert(G.hand[currentPlayer][G.handCount[currentPlayer]-1] == gold || G.hand[currentPlayer][G.handCount[currentPlayer]-1] == silver || G.hand[currentPlayer][G.handCount[currentPlayer]-1] == copper || G.hand[currentPlayer][G.handCount[currentPlayer]-1] == pre.hand[currentPlayer][G.handCount[currentPlayer]-1]);
+
+	    if (G.hand[currentPlayer][G.handCount[currentPlayer]-1] == pre.hand[currentPlayer][G.handCount[currentPlayer]-1]) {
+            	assert(G.hand[currentPlayer][G.handCount[currentPlayer]-2] == gold || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == silver || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == copper || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == pre.hand[currentPlayer][G.handCount[currentPlayer]-2]);
+            } else {
+		assert(G.hand[currentPlayer][G.handCount[currentPlayer]-2] == gold || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == silver || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == copper || G.hand[currentPlayer][G.handCount[currentPlayer]-2] == pre.hand[currentPlayer][G.handCount[currentPlayer]-1]);
+	    }
+
             //test for correct hand count (+2 treasure, -1 discard adventurer)
-            assert(G.handCount[currentPlayer] == pre.handCount[currentPlayer] + 1);
+            assert(G.handCount[currentPlayer] >= pre.handCount[currentPlayer] + 1);
             
             //test for playing 1 card
             assert(G.playedCardCount == (pre.playedCardCount + 1));
